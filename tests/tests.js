@@ -97,9 +97,11 @@
     for (let k = 0; k < 40; k++) {
       const r = R.build({ minutes, focus, level, unlocked: UNLOCKED, fresh: FRESH });
       const steps = R.steps(r);
-      const sum = steps.reduce((a, x) => a + x.dur, 0);
+      const sum = steps.filter(x => x.kind !== 'ready').reduce((a, x) => a + x.dur, 0);
+      const prep = steps.filter(x => x.kind === 'ready').reduce((a, x) => a + x.dur, 0);
       if (Math.abs(r.total - minutes * 60) > 1) problems.add(`total ${r.total}s`);
       if (Math.abs(sum - r.total) > 0.01) problems.add('steps≠total');
+      if (Math.abs(prep - r.prep) > 0.01 || prep < r.items.length * 35) problems.add('prep time');
       if (new Set(r.items.map(it => it.pose.id)).size !== r.items.length) problems.add('duplicate pose');
       if (r.items.some(it => !allowedFor(level, it.pose))) problems.add('wrong level pose');
       if (r.items[r.items.length - 1].pose.id !== 'savasana') problems.add('final rest not last');
@@ -112,7 +114,7 @@
     combos++;
     if (problems.size) { comboFails++; check(`${level} · ${focus} · ${minutes} min`, false, [...problems].join(', ')); }
   }
-  check(`${combos} combinations × 40 builds: exact length, no duplicates, right levels, final rest last`, comboFails === 0);
+  check(`${combos} combinations × 40 builds: exact stretching length (prep on top), no duplicates, right levels, final rest last`, comboFails === 0);
   check(`Advanced: this week's 2 new poses appear in sessions (${(freshHits / freshTotal * 100).toFixed(0)}%)`, freshHits / freshTotal > 0.95);
   check('Advanced with nothing unlocked falls back to no hard poses', [10, 25].every(m => R.build({ minutes: m, level: 'a' }).items.every(it => it.pose.lvl !== 'a')));
   const tired = Object.fromEntries(POSES.map(p => [p.id, Date.now()]));
@@ -225,6 +227,15 @@
     await a.click('[data-act="s-prev"]', 100);
     check(`Back after a few seconds restarts the current pose (${t1}s → ${t2}s → ${secs()}s, still ${a.$('.s-name').textContent})`,
       a.$('.s-name').textContent === second && t2 < t1 && secs() >= t1 - 1);
+    const pill = () => a.$('.s-breath');
+    check(`Prep shows "Get into position" with a Start pose button (${secs()}s)`,
+      /Get into position/i.test(a.$('.s-phase').textContent) && pill().classList.contains('go') && /Start pose/.test(pill().textContent) && secs() >= 30);
+    await a.click('[data-act="s-ready"]', 150);
+    const phaseNow = a.$('.s-phase').textContent;
+    check(`"Start pose" skips the prep and starts holding the same pose (${phaseNow}, ${a.$('.s-name').textContent})`,
+      /Hold/i.test(phaseNow) && a.$('.s-name').textContent === second && !pill().classList.contains('go'));
+    await a.click('[data-act="s-ready"]', 150);
+    check('Tapping it again mid-hold does nothing', a.$('.s-phase').textContent === phaseNow && a.$('.s-name').textContent === second);
     await a.click('[data-act="s-exit"]', 100); await a.click('[data-act="s-end"]', 300);
 
     // Skipping through doesn't count

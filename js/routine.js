@@ -1,7 +1,7 @@
 /* Builds a balanced session: warm-up -> main poses -> cool-down -> final rest.
  * Poses are ordered by body position so you move standing -> kneeling -> seated -> floor,
- * recently used poses are de-prioritized, and hold times are tuned so the total
- * lands on the length you picked.
+ * recently used poses are de-prioritized, and hold times are tuned so the stretching
+ * time lands on the length you picked. Getting-into-position time comes on top.
  */
 (function () {
   const { POSES } = window.YogaData;
@@ -28,14 +28,14 @@
 
   const ADVANCED = POSES.filter(p => p.lvl === 'a').sort((a, b) => a.unlock - b.unlock);
 
-  // Time to read the steps and get into each pose.
+  // Time to read the steps and get into each pose. Not counted in the session length.
   const readyTime = level => (level === 'b' ? 45 : 35);
   function baseHold(p, level, light) {
     let h = p.lvl === 'a' || level === 'b' ? p.hold : Math.round((p.hold * 1.3) / 5) * 5;
     if (light) h = Math.min(h, 30); // head-to-toe routine: lighter holds, more areas
     return h;
   }
-  const cost = (p, hold, ready) => ready + (p.sides ? hold * 2 + SWITCH : hold);
+  const cost = (p, hold) => (p.sides ? hold * 2 + SWITCH : hold);
 
   function matchesFocus(p, focus) {
     const tg = FOCI[focus] && FOCI[focus].tg;
@@ -54,7 +54,7 @@
     const unlocked = new Set(opts.unlocked || []);
     const fresh = new Set(opts.fresh || []);
     const light = !!opts.coverage;
-    const target = minutes * 60 - FIRST_EXTRA;
+    const target = minutes * 60;
     const ready = readyTime(level);
     const now = Date.now();
     const advCap = level === 'a' ? (minutes >= 20 ? 3 : 2) : 0;
@@ -105,18 +105,18 @@
     const warm = pickN('warm', minutes <= 10 ? 2 : minutes <= 20 ? 3 : 4);
     const cool = pickN('cool', minutes <= 15 ? 2 : 3);
 
-    let used = cost(final, finalHold, ready);
-    [...warm, ...cool].forEach(p => { used += cost(p, baseHold(p, level, light), ready); });
+    let used = cost(final, finalHold);
+    [...warm, ...cool].forEach(p => { used += cost(p, baseHold(p, level, light)); });
 
     const main = [];
     const advCount = () => main.filter(p => p.lvl === 'a').length;
     const mainCands = () => pool.filter(p => p.use.includes('main') && !chosen.has(p.id) && (p.lvl !== 'a' || advCount() < advCap));
-    const add = p => { main.push(p); chosen.add(p.id); used += cost(p, baseHold(p, level, light), ready); };
-    const fits = p => cost(p, baseHold(p, level, light), ready) <= target - used + 20;
+    const add = p => { main.push(p); chosen.add(p.id); used += cost(p, baseHold(p, level, light)); };
+    const fits = p => cost(p, baseHold(p, level, light)) <= target - used + 20;
 
     // Newly unlocked advanced poses go into every session until the next unlock.
     // In short sessions, trim the warm-up and cool-down to one pose each to make room.
-    const trim = list => { const q = list.pop(); chosen.delete(q.id); used -= cost(q, baseHold(q, level, light), ready); };
+    const trim = list => { const q = list.pop(); chosen.delete(q.id); used -= cost(q, baseHold(q, level, light)); };
     ADVANCED.filter(p => fresh.has(p.id) && unlocked.has(p.id) && level === 'a').forEach(p => {
       if (advCount() >= advCap) return;
       while (!fits(p) && (cool.length > 1 || warm.length > 1)) trim(cool.length > 1 ? cool : warm);
@@ -154,16 +154,17 @@
     items.forEach(it => { it.hold = baseHold(it.pose, level, light); });
 
     // Stretch or shrink holds so the session lands on the chosen length.
-    const fixed = items.reduce((s, it) => s + ready + (it.pose.sides ? SWITCH : 0), 0) + ready;
+    const fixed = items.reduce((s, it) => s + (it.pose.sides ? SWITCH : 0), 0);
     const holdSum = items.reduce((s, it) => s + it.hold * (it.pose.sides ? 2 : 1), 0);
     const factor = Math.max(0.8, Math.min(1.35, (target - fixed - finalHold) / holdSum));
     items.forEach(it => { it.hold = Math.max(15, Math.round(it.hold * factor)); });
-    const usedNow = items.reduce((s, it) => s + cost(it.pose, it.hold, ready), 0);
-    const fin = Math.max(45, Math.min(180, target - usedNow - ready));
+    const usedNow = items.reduce((s, it) => s + cost(it.pose, it.hold), 0);
+    const fin = Math.max(45, Math.min(180, target - usedNow));
     items.push({ pose: final, phase: 'final', hold: fin });
 
-    const total = FIRST_EXTRA + items.reduce((s, it) => s + cost(it.pose, it.hold, ready), 0);
-    return { items, total, ready, minutes, focus, level, coverage: light };
+    const total = items.reduce((s, it) => s + cost(it.pose, it.hold), 0);
+    const prep = FIRST_EXTRA + items.length * ready; // extra time to get into position, on top of the total
+    return { items, total, prep, ready, minutes, focus, level, coverage: light };
   }
 
   /** Expands a routine into a flat timeline of steps the player walks through. */

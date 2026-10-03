@@ -418,10 +418,13 @@ svg { display: block; }
 .s-fig { position: absolute; inset: 13%; border-radius: 50%; background: radial-gradient(circle at 50% 70%, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02) 70%); display: grid; place-items: center; transition: transform .2s linear; }
 .s-fig .fig { width: 92%; }
 .s-time { font-size: 44px; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: .02em; line-height: 1; }
-.s-breath { margin-top: 12px; height: 40px; padding: 0 18px; border-radius: 999px; background: rgba(255, 255, 255, .08); display: inline-flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; }
+.s-breath { margin-top: 12px; height: 40px; flex: none; padding: 0 18px; border-radius: 999px; background: rgba(255, 255, 255, .08); display: inline-flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; cursor: default; transition: background .3s ease, color .3s ease; }
 .s-breath .bd { width: 10px; height: 10px; border-radius: 50%; background: #A8D19A; transition: background .3s ease, transform .2s linear; }
 .s-breath.hold .bd { background: #E8C484; }
 .s-breath .cnt { color: var(--s-muted); font-variant-numeric: tabular-nums; min-width: 1ch; }
+.s-breath.go { background: #E6EEE0; color: #1C251C; cursor: pointer; }
+.s-breath.go .bd { background: #5E8A55; }
+.s-breath.go:active { transform: scale(.96); }
 .s-steps { flex: none; max-height: 24dvh; overflow-y: auto; background: rgba(255, 255, 255, .06); border-radius: var(--r-md); padding: 14px 16px 4px; margin-bottom: 12px; text-align: left; -webkit-overflow-scrolling: touch; }
 .s-steps .steps li { font-size: 14.5px; padding-bottom: 10px; color: #DCE5D6; }
 .s-steps .steps li::before { background: rgba(255, 255, 255, .1); color: #CFE0C7; width: 24px; height: 24px; font-size: 12px; }

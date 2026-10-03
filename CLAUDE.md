@@ -19,6 +19,8 @@ The owner is not a developer: explain things simply, make the changes, test, and
 
 ## Product rules
 - Lumbar support and everyday flexibility are the focus; keep poses beginner-safe with easier options.
+- Each pose starts with a "get into position" prep (45s beginner, 35s otherwise) that the owner can
+  skip with "Start pose". Prep is on top of the chosen session length and doesn't count as stretching.
 - A practice day counts after 5 minutes of stretching. Every 7 practice days (not necessarily
   consecutive) unlocks 2 advanced poses, in `unlock` order. Open question for the owner: keep this,
   require 7 days in a row, or use calendar weeks.

@@ -281,7 +281,7 @@
 
       <div class="preview">
         <div class="preview-head">
-          <div><b>${r.items.length} poses</b><span>About ${Math.round(r.total / 60)} minutes</span></div>
+          <div><b>${r.items.length} poses</b><span>${Math.round(r.total / 60)} min stretching · +${Math.round(r.prep / 60)} min prep</span></div>
           <button class="btn-ghost" data-act="shuffle">${icon('shuffle')}Shuffle</button>
         </div>
         <ol class="plist">
@@ -569,7 +569,7 @@
           <div class="s-fig"></div>
         </div>
         <div class="s-time">0:00</div>
-        <div class="s-breath"><span class="bd"></span><span class="txt"></span><span class="cnt"></span></div>
+        <button class="s-breath" data-act="s-ready"><span class="bd"></span><span class="txt"></span><span class="cnt"></span></button>
       </div>
       <div class="s-steps"></div>
       <div class="s-controls">
@@ -610,7 +610,7 @@
       e.steps.scrollTop = 0;
     }
     e.side.textContent = st.side || '';
-    e.phase.textContent = st.kind === 'ready' ? (first ? 'First pose' : 'Up next')
+    e.phase.textContent = st.kind === 'ready' ? 'Get into position'
       : st.kind === 'switch' ? 'Switch sides' : it.phase === 'final' ? 'Rest' : 'Hold';
     e.prog.classList.toggle('ready', st.kind !== 'hold');
     e.bars.forEach((b, k) => { b.style.width = k < st.item ? '100%' : k > st.item ? '0%' : b.style.width; });
@@ -651,7 +651,7 @@
     S.last = now;
     if (!S.paused) {
       S.t += dt;
-      S.elapsed += dt;
+      if (S.steps[S.i].kind !== 'ready') S.elapsed += dt; // prep time doesn't count as stretching
       if (S.steps[S.i].kind === 'hold') S.held[S.steps[S.i].item] += dt;
       if (S.t >= S.steps[S.i].dur) {
         S.t = 0;
@@ -692,7 +692,7 @@
       if (br.idx !== S.breathIdx) { S.breathIdx = br.idx; if (!S.paused) sayBreath(label); }
     } else {
       b = 0.28 + 0.1 * Math.sin((now / 1000) * Math.PI / 2);
-      label = st.kind === 'switch' ? 'Change sides' : 'Get into position';
+      label = st.kind === 'switch' ? 'Change sides' : 'Start pose';
     }
     if (S.paused) { label = 'Paused'; cnt = ''; }
 
@@ -706,6 +706,8 @@
     setText(e.btxt, label);
     setText(e.bcnt, cnt);
     e.breath.classList.toggle('hold', holding);
+    const go = st.kind === 'ready' && !S.paused;
+    if (e.breath.classList.contains('go') !== go) { e.breath.classList.toggle('go', go); e.breath.setAttribute('aria-disabled', String(!go)); }
     e.bdot.style.transform = `scale(${(0.8 + 0.7 * b).toFixed(3)})`;
     e.fig.style.transform = `scale(${(0.96 + 0.05 * b).toFixed(3)})`;
     if (S.frames.length > 1) {
@@ -878,6 +880,7 @@
     },
     's-toggle': () => setPaused(!S.paused),
     's-next': nextPose,
+    's-ready': () => { if (S.steps[S.i].kind === 'ready' && !S.paused) jumpTo(S.i + 1); }, // skip the prep once you're in position
     's-prev': prevPose,
     's-exit': askExit,
     's-keep': () => { $('.s-overlay', sess).remove(); setPaused(S.wasPaused); },

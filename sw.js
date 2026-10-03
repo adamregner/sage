@@ -1,6 +1,6 @@
 // Offline support: serve the app from cache, refresh the cache in the background.
 // Bump VERSION whenever you change files so phones pick up the update.
-const VERSION = 'sage-v3';
+const VERSION = 'sage-v4';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/poses.js', 'js/figure.js', 'js/routine.js', 'js/progress.js', 'js/app.js',
