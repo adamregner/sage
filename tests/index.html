@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sage · Tests</title>
+  <style>
+    body { font: 14px/1.5 ui-monospace, Consolas, monospace; margin: 20px; background: #F3F0E8; color: #25302A; }
+    h1 { font: 600 22px system-ui; margin: 0 0 6px; }
+    #summary { font: 600 16px system-ui; margin-bottom: 14px; }
+    #log { white-space: pre-wrap; }
+    /* Kept on-screen (but invisible) so the browser doesn't pause its animation timers */
+    .frames { position: fixed; left: 0; top: 0; opacity: .01; pointer-events: none; }
+    .frames iframe { border: 0; }
+  </style>
+</head>
+<body>
+  <h1>Sage test suite</h1>
+  <p>Run with <code>serve.ps1</code> and open <code>http://localhost:8080/tests/</code>. Uses this browser's storage for the app's origin and clears it.</p>
+  <div id="summary">Running…</div>
+  <div id="log"></div>
+  <div class="frames" id="frames"></div>
+  <script src="../js/poses.js"></script>
+  <script src="../js/figure.js"></script>
+  <script src="../js/routine.js"></script>
+  <script src="../js/progress.js"></script>
+  <script src="tests.js"></script>
+</body>
+</html>

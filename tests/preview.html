@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sage · Preview</title>
+  <!-- Side-by-side phone previews. Example: preview.html?days=6&screens=home,done,library
+       days = practice days to fake (ending yesterday); screens = home | done | setup | session | library | progress | pose -->
+  <style>
+    body { margin: 0; background: #8a8a8a; display: flex; gap: 10px; padding: 0; }
+    iframe { width: 390px; height: 844px; border: 0; background: #fff; flex: none; }
+  </style>
+</head>
+<body>
+  <script>
+    const q = new URLSearchParams(location.search);
+    const days = Number(q.get('days') || 0);
+    const day = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    localStorage.setItem('sage.history', JSON.stringify(Array.from({ length: days }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - 1 - i);
+      return { d: day(d), ts: d.getTime(), min: 15, n: 12, focus: 'full', level: 'b' };
+    })));
+    if (q.get('level')) localStorage.setItem('sage.prefs', JSON.stringify({ level: q.get('level') }));
+    else localStorage.removeItem('sage.prefs');
+    (q.get('screens') || 'home').split(',').forEach(s => {
+      const f = document.createElement('iframe');
+      f.src = '../index.html' + (s === 'home' ? '' : `?demo=${s}`);
+      if (q.get('h')) f.style.height = q.get('h') + 'px';
+      document.body.appendChild(f);
+    });
+  </script>
+</body>
+</html>
