@@ -28,7 +28,8 @@
 
   const ADVANCED = POSES.filter(p => p.lvl === 'a').sort((a, b) => a.unlock - b.unlock);
 
-  const readyTime = level => (level === 'b' ? 10 : 8);
+  // Time to read the steps and get into each pose.
+  const readyTime = level => (level === 'b' ? 45 : 35);
   function baseHold(p, level, light) {
     let h = p.lvl === 'a' || level === 'b' ? p.hold : Math.round((p.hold * 1.3) / 5) * 5;
     if (light) h = Math.min(h, 30); // head-to-toe routine: lighter holds, more areas
@@ -114,8 +115,12 @@
     const fits = p => cost(p, baseHold(p, level, light), ready) <= target - used + 20;
 
     // Newly unlocked advanced poses go into every session until the next unlock.
+    // In short sessions, trim the warm-up and cool-down to one pose each to make room.
+    const trim = list => { const q = list.pop(); chosen.delete(q.id); used -= cost(q, baseHold(q, level, light), ready); };
     ADVANCED.filter(p => fresh.has(p.id) && unlocked.has(p.id) && level === 'a').forEach(p => {
-      if (advCount() < advCap && fits(p)) add(p);
+      if (advCount() >= advCap) return;
+      while (!fits(p) && (cool.length > 1 || warm.length > 1)) trim(cool.length > 1 ? cool : warm);
+      if (fits(p)) add(p);
     });
 
     // Head-to-toe: make sure every major area gets some attention.
